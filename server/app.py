@@ -55,7 +55,7 @@ def delete_restaurant(id):
         return jsonify({"error": "Restaurant not found"}), 404
     db.session.delete(restaurant)
     db.session.commit()
-    return jsonify({"message": "Restaurant deleted successfully"}), 204
+    return jsonify({}), 204
 
 @app.route("/pizzas", methods=["GET"])
 def get_pizzas():
@@ -64,26 +64,40 @@ def get_pizzas():
 
 @app.route("/restaurant_pizzas", methods=["POST"])
 def add_restaurant_pizza():
-    data = request.get_json()
-    restaurant = Restaurant.query.get(data.get('restaurant_id'))
-    pizza = Pizza.query.get(data.get('pizza_id'))
-    if not restaurant or not pizza:
+    try:
+        data = request.get_json()
+        if 'price' not in data or 'pizza_id' not in data or 'restaurant_id' not in data:
+            return jsonify({"errors": ["validation errors"]}), 400
+
+        restaurant = Restaurant.query.get(data.get('restaurant_id'))
+        pizza = Pizza.query.get(data.get('pizza_id'))
+
+        if not restaurant or not pizza:
+            return jsonify({"errors": ["validation errors"]}), 400
+
+        price = data['price']
+        if not (1 <= price <= 30):
+            return jsonify({"errors": ["Must have a price between 1 and 30"]}), 400
+    except ValueError:
         return jsonify({"errors": ["validation errors"]}), 400
-    new_restaurant_pizza = RestaurantPizza(price=data['price'], pizza_id=pizza.id, restaurant_id=restaurant.id)
-    db.session.add(new_restaurant_pizza)
-    db.session.commit()
-except Exemption as e:
-    db.session.rollback()
-    return jsonify({"errors": ["str(e)"]}), 500
 
+        new_restaurant_pizza = RestaurantPizza
+    (price=price, pizza_id=pizza.id, restaurant_id=restaurant.id)
+        db.session.add(new_restaurant_pizza)
+        db.session.commit()
 
-        "id": new_restaurant_pizza.id,
-        "pizza": {"id": pizza.id, "ingredients": pizza.ingredients, "name": pizza.name},
-        "pizza_id": pizza.id,
-        "price": new_restaurant_pizza.price,
-        "restaurant": {"address": restaurant.address, "id": restaurant.id, "name": restaurant.name},
-        "restaurant_id": restaurant.id
-    }), 201
+        response_data = {
+            "id": new_restaurant_pizza.id,
+            "pizza": {"id": pizza.id, "ingredients": pizza.ingredients, "name": pizza.name},
+            "pizza_id": pizza.id,
+            "price": new_restaurant_pizza.price,
+            "restaurant": {"address": restaurant.address, "id": restaurant.id, "name": restaurant.name},
+            "restaurant_id": restaurant.id
+        }
+        return jsonify(response_data), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"errors": [str(e)]}), 500
 
 # Run the application
 if __name__ == "__main__":
