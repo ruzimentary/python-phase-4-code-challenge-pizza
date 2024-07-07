@@ -72,7 +72,11 @@ def add_restaurant_pizza():
     new_restaurant_pizza = RestaurantPizza(price=data['price'], pizza_id=pizza.id, restaurant_id=restaurant.id)
     db.session.add(new_restaurant_pizza)
     db.session.commit()
-    return jsonify({
+except Exemption as e:
+    db.session.rollback()
+    return jsonify({"errors": ["str(e)"]}), 500
+
+
         "id": new_restaurant_pizza.id,
         "pizza": {"id": pizza.id, "ingredients": pizza.ingredients, "name": pizza.name},
         "pizza_id": pizza.id,
