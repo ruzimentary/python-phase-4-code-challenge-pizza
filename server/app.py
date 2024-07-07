@@ -77,12 +77,9 @@ def add_restaurant_pizza():
 
         price = data['price']
         if not (1 <= price <= 30):
-            return jsonify({"errors": ["Must have a price between 1 and 30"]}), 400
-    except ValueError:
-        return jsonify({"errors": ["validation errors"]}), 400
+            return jsonify({"errors": ["validation errors"]}), 400
 
-        new_restaurant_pizza = RestaurantPizza
-    (price=price, pizza_id=pizza.id, restaurant_id=restaurant.id)
+        new_restaurant_pizza = RestaurantPizza(price=price, pizza_id=pizza.id, restaurant_id=restaurant.id)
         db.session.add(new_restaurant_pizza)
         db.session.commit()
 
@@ -97,7 +94,7 @@ def add_restaurant_pizza():
         return jsonify(response_data), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"errors": [str(e)]}), 500
+        return jsonify({"errors": ["validation errors"]}), 500
 
 # Run the application
 if __name__ == "__main__":
